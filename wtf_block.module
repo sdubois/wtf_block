@@ -1,0 +1,63 @@
+<?php
+// Deny access to users without permission
+function wtf_block_init() {
+  if (!user_access('administer wtf_block settings')) {
+    drupal_access_denied();
+  }
+}
+
+// Add permission to the permissions table
+function wtf_block_permission() {
+  return array(
+    'administer wtf_block settings' => array(
+      'title' => t('Configure wtf_block'),
+      'description' => t('Configure wtf_block settings'),
+    ),
+  );
+}
+
+//Builds admin page
+function wtf_block_admin() {
+  //GLOBAL $theme_key;
+  $form = array();
+  $none =  array('none' => 'No region');
+  $regions = system_region_list('bartik', REGIONS_VISIBLE); //should be $theme_key, but that gives me the admin theme not the site theme
+  $form['wtf_block_region'] = array(
+	'#type' => 'select',
+    '#title' => t('Name of region to move all blocks to'),
+    '#default_value' =>  variable_get('wtf_block_region', 'none'),
+    '#options' => array_merge($none, $regions), // Add none to array of regions
+    '#description' => t("Select 'None' to disable"),
+    '#required' => TRUE,
+  );
+  return system_settings_form($form);
+}
+
+// Hook menu. Defines URL for config page
+function wtf_block_menu() {
+  $items['admin/settings/wtf_block'] = array(
+    'title' => 'wtf_block Configuration',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('wtf_block_admin'),
+	'access callback' => TRUE,
+  );
+  return $items;
+}
+
+
+// Changes region for every block to one set in config. If none, do nothing, if the
+// Block is in 'content' region, ignore
+function wtf_block_block_list_alter(&$blocks) {
+	$wtf_region= variable_get('wtf_block_region');
+	if(($wtf_region != 'none') || ($wtf_region == NULL)){
+		foreach ($blocks as $block_id => $block) {	   
+			if($block->region != 'content'){	
+			   $block->region = $wtf_region;
+			}
+		}
+	}
+
+}
+
+
+?>

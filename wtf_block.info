@@ -1,0 +1,3 @@
+core = "7.x"
+description = "Moves all site blocks into a single block of your choosing"
+name = "wtf_block"
